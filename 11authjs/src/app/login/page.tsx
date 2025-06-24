@@ -1,32 +1,66 @@
 'use client';
-import React, { useState } from 'react';
-import { useRouter } from 'next/router';  
+import React, { use, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';  
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';   
 import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
+import toast from 'react-hot-toast';
+import { set } from 'mongoose';
+import Img from 'next/image';
 
 
 export default function LoginPage() {
+    const router = useRouter();
+    const [loading, setLoading] = useState(false);
+    const [buttonDisabled, setButtonDisabled] = useState(true);
     const [user, setUser] = React.useState({
         email: '',
         password: ''
     });
 
+
     const onLogin = async (e: React.FormEvent) => {
-        e.preventDefault(); }
+      try {
+        setLoading(true);
+        const response = await axios.post('/api/users/login', user);
+        console.log("Login Success", response.data);
+        toast.success("Login Successful");
+        // Redirect to the home page or dashboard after successful login
+        router.push('/profile')
+
+      } catch (error: any) {
+        console.log("Login Failed", error.message);
+        toast.error(error.message);
+        
+      } finally {
+        setLoading(false);
+      }
+       }
+      
+    useEffect(() => {
+      if (user.email.length > 0 && user.password.length > 0) {
+        setButtonDisabled(false);
+      } else {
+        setButtonDisabled(true);
+      }
+    }, [user]);
 
 
  return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-100 p-4">
+      
       <div className="bg-white shadow-2xl rounded-3xl max-w-sm w-full p-8 flex flex-col items-center space-y-6">
-        {/* Illustration Placeholder */}
-        <div className="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-500 font-bold text-xl">
-          {/* Replace this with <Image /> from next/image if you have an SVG or PNG */}
-          Logo
+
+        <div className="w-24 h-24 bg-indigo-100 m-5 rounded-full flex items-center justify-center">
+          <Img 
+          width={100}
+          height={100}
+          className="object-cover rounded-full"
+          src="/images/icon.jpeg" alt="Logo" />
         </div>
 
-        <h2 className="text-2xl font-semibold text-gray-800">Login to Your Account</h2>
+        <h2 className="text-2xl font-semibold text-gray-800">{loading ? "Loading..." : "Login"}</h2>
 
         <form className="w-full space-y-4">
           <div>
@@ -69,16 +103,18 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full bg-indigo-500 text-white py-2 rounded-xl hover:bg-indigo-600 transition duration-200"
+            disabled={buttonDisabled || loading}
+            className={`w-full bg-indigo-500 text-white py-2 rounded-xl hover:bg-indigo-600 transition duration-200 
+              ${buttonDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
             onClick={onLogin}
           >
-            Sign In
+           Sign In
           </button>
         </form>
 
         <p className="text-sm text-gray-600">
           Don’t have an account?{' '}
-          <a href="#" className="text-indigo-500 hover:underline">
+          <a href="/signup" className="text-indigo-500 hover:underline">
             Sign Up
           </a>
         </p>

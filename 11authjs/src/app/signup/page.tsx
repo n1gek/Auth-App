@@ -2,39 +2,51 @@
 import Link from "next/link";
 import React, {useEffect, useState} from 'react';
 import { useRouter } from 'next/navigation';
-import {axios} from 'axios';
+import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
-import { faLock } from '@fortawesome/free-solid-svg-icons';
-import { faUser } from '@fortawesome/free-solid-svg-icons';
-import { set } from "mongoose";
+import { faEnvelope, faLock, faUser } from '@fortawesome/free-solid-svg-icons';
+import toast from 'react-hot-toast';
 
 export default function SignUpPage() {
   const router = useRouter();
-    const [user, setUser] = React.useState({
-        email: '',
-        password: '',
-        username: ''
+  const [loading, setLoading] = React.useState(false);
+  const [user, setUser] = React.useState({
+    email: '',
+    password: '',
+    username: ''
+  });
+  const [buttonDisabled, setButtonDisabled] = React.useState(true);
 
-    })
-    const [buttonDisabled, setButtonDisabled] = React.useState(false);
-    const onSignUp = async () => {
-            
-        }
+  const onSignUp = async (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent default form submission
+    try {
+      setLoading(true);
+      const response = await axios.post('/api/users/signup', user);
+      console.log("Signup response:", response.data);
+      toast.success('Signup successful!');
+      router.push('/login'); // Redirect after successful signup
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
-        useEffect(() => {
-          if(user.email.length > 0 && user.password.length > 0 && user.username.length > 0 ){
-            setButtonDisabled(false);
-          }else {
-            setButtonDisabled(true);
-          }
-        }, [user]);
+  useEffect(() => {
+    setButtonDisabled(
+      !(user.email.length > 0 && 
+        user.password.length > 0 && 
+        user.username.length > 0)
+    );
+  }, [user]);
 
-     return (
+  return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-4">
-      <div className="bg-white rounded-3xl shadow-lg p-10 w-full max-w-md">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">Create Account</h2>
-        
+      <form onSubmit={onSignUp} className="bg-white rounded-3xl shadow-lg p-10 w-full max-w-md">
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">
+          {loading ? 'Loading...' : 'Create Account'}
+        </h2>
+
         <div className="mb-5">
           <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-700">User Name</label>
           <div className="relative">
@@ -45,7 +57,7 @@ export default function SignUpPage() {
               id="name"
               type="text"
               placeholder="Your name"
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full pl-10 pr-4 py-2 border text-black border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400"
             />
           </div>
         </div>
@@ -60,7 +72,7 @@ export default function SignUpPage() {
               id="email"
               type="email"
               placeholder="you@example.com"
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full pl-10 pr-4 py-2 border text-black border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400"
             />
           </div>
         </div>
@@ -82,16 +94,23 @@ export default function SignUpPage() {
 
         <button
           type="submit"
-          className="w-full bg-indigo-600 text-white py-2 rounded-xl hover:bg-indigo-700 transition duration-200"
-          onClick={onSignUp}
+          disabled={buttonDisabled || loading}
+          className={`w-full py-2 rounded-xl transition duration-200 bg-indigo-700 text-white ${
+            buttonDisabled || loading 
+              ? 'bg-indigo-400 opacity-50 cursor-not-allowed'
+              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+          }`}
         >
-          {buttonDisabled ? 'Please fill all fields' : 'Sign Up'}
+          {loading ? 'Processing...' : 'Sign Up'}
         </button>
 
         <p className="mt-6 text-center text-sm text-gray-600">
-          Already have an account? <a href="/login" className="text-indigo-600 hover:underline">Log in</a>
+          Already have an account?{' '}
+          <Link href="/login" className="text-indigo-600 hover:underline">
+            Log in
+          </Link>
         </p>
-      </div>
+      </form>
     </div>
   );
-    }
+}

@@ -1,23 +1,15 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
+
+let isConnected = false;
 
 export async function connect() {
+  if (isConnected) return;
 
-    try {
-        mongoose.connect(process.env.MONGO_URL!);
-        const connection = mongoose.connection;
+  if (!process.env.MONGODB_URI) {
+    throw new Error("❌ MONGODB_URI not defined");
+  }
 
-        connection.on('connected', () => {
-            console.log('Connected to MongoDB Successfully');
-        });
-
-        connection.on('error', (error) => {
-            console.log('Error connecting to MongoDB');
-            console.error(error);
-        });
-
-    } catch (error) {
-        console.log('Something went wrong while connecting to the database');
-        console.error(error);
-        
-    }
+  await mongoose.connect(process.env.MONGODB_URI);
+  isConnected = true;
+  console.log("✅ Connected to MongoDB");
 }
