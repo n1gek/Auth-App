@@ -21,22 +21,25 @@ export default function LoginPage() {
 
 
     const onLogin = async (e: React.FormEvent) => {
-      try {
-        setLoading(true);
-        const response = await axios.post('/api/users/login', user);
-        console.log("Login Success", response.data);
-        toast.success("Login Successful");
-        // Redirect to the home page or dashboard after successful login
-        router.push('/profile')
+  e.preventDefault();
+  try {
+    setLoading(true);
+    const response = await axios.post('/api/users/login', user);
+    console.log("Login Success", response.data);
+    toast.success("Login Successful");
+    
+    // Confirm client side router push
+    console.log('Routing to /profile');
+    router.push(`/profile/${response.data.id}`);
 
-      } catch (error: any) {
-        console.log("Login Failed", error.message);
-        toast.error(error.message);
-        
-      } finally {
-        setLoading(false);
-      }
-       }
+  } catch (error: any) {
+    console.log("Login Failed", error.message);
+    toast.error(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
       
     useEffect(() => {
       if (user.email.length > 0 && user.password.length > 0) {
